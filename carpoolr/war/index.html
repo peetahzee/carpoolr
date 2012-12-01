@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Project Carpoolr</title>
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,700,800' rel='stylesheet' type='text/css'>
+		<link href='assets/style.css' rel='stylesheet' type='text/css'>
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<script type="text/javascript" src="assets/jquery.center.js"></script>
+		<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places&key=AIzaSyBfwn19JCKZSWqDsjQjGaOATvIXccQYT-Y&sensor=true"></script>
+	    <script type="text/javascript" src="assets/script.js"></script>
+	    <script type="text/javascript">
+	    	var eventDetails = new Array();
+	    	$(document).ready(function() {
+	    		$("#startEvent").click(function() {
+	    			$("#welcomeScreen").hide(300, function() {
+	    				$("#startEvent1").show(300);
+	    				eventDetails = new Array();
+	    			});
+	    		});
+	    		
+	    		$("#startEvent1Next").click(function(event) {
+	    			$("form#startEvent1Form input").each(function() {
+	    				eventDetails[$(this).attr("name")] = $(this).val();
+	    			});
+	    			$("#startEvent1").hide(300);
+	    			$(".dialog").hide(300);
+	    			
+	    			askForLocation("Around where will you start travelling?", "setStartEventOrigin");
+	    			
+	    			event.preventDefault();
+	    			return false;
+	    		});
+	    	});
+	    	
+	    	function setStartEventOrigin(lat, lng) {
+	    		eventDetails['eventOrigin'] = new google.maps.LatLng(lat, lng);
+	    		
+	    		resetMap();
+	    		askForLocation("Search for your Destination...", "setStartEventDestination");
+	    	}
+	    	
+	    	function setStartEventDestination(lat, lng) {
+	    		eventDetails['eventDestination'] = new google.maps.LatLng(lat, lng);
+	    		
+	    		resetMap();
+	    		console.log(eventDetails);
+	    		
+	    		$("#eventNameConfirm").html(eventDetails['eventName']);
+	    		$("#eventHostConfirm").html(eventDetails['eventHost']);
+	    		$("#eventCapacityConfirm").html(eventDetails['eventCapacity']);
+	    		$("#eventOriginConfirm").html(eventDetails['eventOrigin'].toString());
+	    		$("#eventDestinationConfirm").html(eventDetails['eventDestination'].toString());
+	    		
+	    		$("#startEventConfirm").show(0);
+	    		$(".dialog").show(300);
+	    	}
+	    </script>
+	</head>
+	<body>
+		<header>
+			<div id="logo"></div>
+		</header>
+		<div id="content">
+			<div id="map_canvas" style="width:100%; height:100%"></div>
+		</div>
+		<div id="welcome" class="dialog">
+			<div id="welcomeScreen">
+			<div id="welcome_header"></div>
+			<p>Tired of spending hours in figuring out the best way to pick people up, or finding your driver at the right time? We can help you organize carpooling more efficiently.</p>
+			
+			<div class="option" id="haveCode">
+				<h4 class="green">I have a code</h4>
+				<p>Somebody else started an event on Carpoolr and I'd like to join their event.</p>
+				<input type="text" name="eventCode" /><button>Go ></button>
+			</div>
+			<div class="option" id="startEvent">
+				<h4 class="blue">I want to start an event</h4>
+				<p>I have an event coming up and I want to organize carpools.</p>
+				<button class="blue">Start an event ></button>
+			</div>
+			</div>
+			
+			<div id="startEvent1" style="display: none;">
+			<h1 class="blue">Start an event</h1>
+				<p>Sweet! Fill in some details and we'll get you started right away.</p>
+				<form id="startEvent1Form">
+				<div class="input_wrapper">
+					<label class="blue">Event name</label>
+					<input type="text" name="eventName" />
+				</div>
+				<div class="input_wrapper">
+					<label class="blue">Host name</label>
+					<input type="text" name="eventHost" />
+				</div>
+				<div class="input_wrapper">
+					<label class="blue">Capacity <i>(optional)</i></label>
+					<input type="text" name="eventCapacity" />
+				</div>
+				<div class="input_wrapper">
+					<label class="blue"></label>
+					<button class="blue" id="startEvent1Next">Next ></button>
+				</div>
+				</form>
+			</div>
+			
+			<div id="startEventConfirm" style="display: none;">
+			<h1 class="blue">Confirm Event</h1>
+				<p>Here's what you entered:</p>
+				<form id="startEventConfirmForm">
+				<div class="input_wrapper">
+					<label class="blue">Event name</label>
+					<div id="eventNameConfirm"></div>
+				</div>
+				<div class="input_wrapper">
+					<label class="blue">Host name</label>
+					<div id="eventHostConfirm"></div>
+				</div>
+				<div class="input_wrapper">
+					<label class="blue">Capacity</label>
+					<div id="eventCapacityConfirm"></div>
+				</div>
+				<div class="input_wrapper">
+					<label class="blue">Start Location</label>
+					<div id="eventOriginConfirm"></div>
+				</div>
+				<div class="input_wrapper">
+					<label class="blue">Destination</label>
+					<div id="eventDestinationConfirm"></div>
+				</div>
+				<div class="input_wrapper">
+					<label class="blue"></label>
+					<button class="blue" id="startEventConfirmButton">Confirm ></button>
+				</div>
+				</form>
+			</div>
+		</div>
+		
+		<div id="map_search" style="display: none">
+			<div class="input_wrapper">
+				<form>
+					<label class="blue"></label>
+					<input type="text" name="eventOrigin" />
+				</form>
+			</div>
+		</div>
+
+	</body>
+</html>

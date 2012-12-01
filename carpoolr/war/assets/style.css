@@ -1,0 +1,341 @@
+html,body {
+	background: #FFF;
+	font-family: "Helvetica Neue", "Arial", sans-serif;
+	font-weight: 300;
+	color: #333;
+}
+
+#map_canvas {
+	width: 100%;
+	height: 100%;
+}
+
+#logo {
+	background: url("logo.png");
+	width: 363px;
+	height: 62px;
+}
+
+header {
+	position: fixed;
+	top: 0;
+	right: 0;
+	left: 0;
+	height: 62px;
+	box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.8);
+	z-index: 2;
+	padding: 10px;
+	border-bottom: 2px solid #1B5607;
+	background: url('headerbg2.jpg');
+}
+
+header #user {
+	top: 0;
+	right: 0;
+	padding: 10px 20px;
+	margin: 20px;
+	background: rgba(255, 255, 255, 0.2);
+	position: fixed;
+	color: #fff;
+	font-size: 15p;
+}
+
+header a#logoutLink {
+	color: white;
+	font-size: 12px;
+}
+
+#content {
+	position: fixed;
+	padding-top: 84px;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	opacity: 0.7;
+}
+#route_details {
+	height: auto;
+	left: 0;
+	top: 84px;
+	margin: 20px 0 0 80px;
+	padding: 10px;
+	background: rgba(255, 255, 255, 0.8);
+	width: 25%;
+	font-size: 80%;
+}
+#route_details #avatars {
+	margin-top: 10px;
+}
+#route_details #avatars img {
+	width: 30px;
+	margin: 0 0 5px 0;
+	cursor: pointer;
+}
+#event_buttons {
+	position: fixed;
+	left: 26%;
+	top: 84px;
+	margin-top: 20px;
+	margin-left: 100px;
+	
+	width: 60px;
+	line-height: 50px;
+}
+#event_buttons button {
+	width: 60px;
+	font-size: 12px;
+	background: rgba(255,255,255,0.8);
+	text-align: center;
+	padding: 15px 0;
+	border: 1px solid #aaa;
+	color: #666 !important;
+}
+#event_buttons button#addRiderButton {
+	border-color: #1F4A04;
+	background: rgba(63,128,23,0.8);
+	color: white !important;
+}
+
+#event_buttons button#addDriverButton {
+	border-color: #851818;
+	background: rgba(209, 73, 73, 0.8);
+	color: white !important;
+}
+#event_buttons button#manageButton {
+	border-color: #12558d;
+	background: rgba(72, 133, 184, 0.8);
+	color: white !important;
+}
+#route_details h1 {
+	font-family: "Open Sans";
+	font-weight: normal;
+	margin: 0;
+	padding: 0;
+}
+#route_details > p {
+	margin: 0;
+	padding: 0;
+}
+
+.dialog {
+	z-index: 2;
+	width: 600px;
+	height: 300px;
+	background: white;
+	padding: 10px;
+	border-radius: 5px;
+	border: 1px solid #999;
+	box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.6);
+}
+
+.dialog .backLink {
+	position: absolute;
+	bottom: 10px;
+	left: 10px;
+}
+
+.dialog #welcome_header {
+	background: url('welcomeimage.jpg');
+	height: 100px;
+	border-radius: 5px;
+	margin-bottom: 10px;
+	font-family: "Open Sans";
+}
+.dialog h1 {
+	font-family: "Open Sans";
+	font-size: 30px;
+	line-height: 30px;
+	border-bottom: 1px solid #ddd;
+	padding: 0;
+	margin: 15px 0 10px 5px;
+}
+
+.dialog p {
+	margin: 10px 5px 0 5px;
+	padding: 0;
+	line-height: 20px;
+}
+
+.dialog .option {
+	width: 49%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	margin-top: 10px;
+	padding: 10px;
+	float: left;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	background: -webkit-linear-gradient(#ffffff 0%, #f3f3f3 100%);
+	background: -moz-linear-gradient(#ffffff 0%, #f3f3f3 100%);
+}
+.dialog .option:first-of-type {
+	margin-right: 1%;
+}
+.dialog .option:last-of-type {
+	margin-left: 1%;
+}
+
+.option h4 {
+	font-family: "Open Sans";
+	font-size: 20px;
+	margin: 0;
+	padding: 0;
+}
+
+.option p {
+	font-size: 14px;
+	margin: 0 0 10px 0;
+}
+
+#map_search {
+	position: absolute;
+	top: 104px;
+	left: 85px;
+	padding: 10px;
+	background: rgba(255,255,255,0.8);
+	border: rgba(150,150,150,0.8);
+	border-radius: 5px;
+}
+#map_search .input_wrapper {
+	margin: 0;
+}
+#map_search .input_wrapper label {
+	width: auto;
+}
+#map_search p {
+	font-size: 13px;
+	margin: 5px 0 0 0;
+}
+
+ul.user_list {
+	margin: 0 0 10px 0;
+	padding: 0;
+	list-style: none;
+	border-top: 1px solid #ddd;
+}
+
+ul.user_list li {
+	padding: 5px;
+	border-bottom: 1px solid #ddd;
+	cursor: pointer;
+}
+ul.user_list li img {
+	height: 20px;
+	float: left;
+	margin-right: 5px;
+}
+ul.user_list li span.name {
+	display: inline-block;
+	line-height: 20px;
+	float: left;
+}
+ul.user_list li span.action {
+	float: right;
+	line-height: 20px;
+}
+
+ul#riders {
+	padding: 10px;
+	background: rgba(0,0,0,0.02);
+	border-top: 0;
+}
+
+ul#riders li.taken{
+	background: rgba(0,0,0,0.04);
+}
+
+.input_wrapper {
+	margin-top: 5px;
+}
+
+.input_wrapper label{
+	width: 150px;
+	text-align: right;
+	display: inline-block;
+	margin-right: 10px;
+	padding: 5px 0px;
+	font-weight: bold;
+}
+.input_wrapper div {
+	display: inline-block;
+	padding: 5px 0px;
+}
+.input_wrapper input {
+	width: 300px;
+}
+input {
+	padding: 5px;
+	font-family: "Helvetica Neue", "Arial";
+	border: 1px solid #bbb;
+	border-radius: 3px;
+	font-size: 15px;
+	margin-right: 5px;
+	width: 150px;
+	background: -webkit-linear-gradient(#f3f3f3 0%, #ebebeb 100%);
+	background: -moz-linear-gradient(#f3f3f3 0%, #ebebeb 100%);
+}
+
+button {
+	font-size: 15px;
+	padding: 3px 30px;
+	font-family: "Open Sans";
+	background: -webkit-linear-gradient(#308713 0%, #1B5607 100%);
+	background: -moz-linear-gradient(#308713 0%, #1B5607 100%);
+	color: white;
+	border: 1px solid #1b4303;
+	border-radius: 3px;
+	cursor: pointer;
+	-webkit-transition: 0.3s all;
+	color: white !important;
+}
+button.blue { background: -webkit-linear-gradient(#237fce 0%, #12558d 100%); background: -moz-linear-gradient(#237fce 0%, #12558d 100%); }
+button.red { background: -webkit-linear-gradient(#BD3535 0%, #851818 100%); background: -moz-linear-gradient(#BD3535 0%, #851818 100%); }
+
+button:hover { opacity: 0.8; }
+
+a {
+	color: #377b10;
+	text-decoration: none;
+	-webkit-transition: 0.3s all;
+}
+
+a:hover {
+	opacity: 0.8;
+}
+
+.green { color: #1B5607; }
+.blue { color: #12558d; }
+.red { color: #851818; }
+.error { color: #ff0000; }
+input.error {color: inherit; border-color: #ff0000; }
+
+.clear {
+	clear: both;
+}
+
+/* =================
+ * jQueryUI Override
+ * ================= */
+ 
+ .ui-widget {
+ 	font-family: "Helvetica Neue", "Arial" !important;
+ 	font-size: 12px !important;
+ }
+ 
+ .ui-widget button {
+ 	color: #2e6e9e !important;
+ }
+ 
+ /* css for timepicker */
+.ui-timepicker-div .ui-widget-header { margin-bottom: 8px; }
+.ui-timepicker-div dl { text-align: left; }
+.ui-timepicker-div dl dt { height: 25px; margin-bottom: -25px; font-weight: bold; width: 55px; text-align: right;}
+.ui-timepicker-div dl dd { margin: 0 10px 10px 65px; }
+.ui-timepicker-div dl dd input { font-size: 11px !important; font-family: "Helvetica Neue", "Arial";}
+.ui-timepicker-div td { font-size: 90%; }
+.ui-tpicker-grid-label { background: none; border: none; margin: 0; padding: 0; }
+
+.ui-timepicker-rtl{ direction: rtl; }
+.ui-timepicker-rtl dl { text-align: right; }
+.ui-timepicker-rtl dl dd { margin: 0 65px 10px 10px; }
