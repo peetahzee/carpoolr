@@ -16,6 +16,12 @@ $(document).ready(function() {
 	$(".dialog").center();
 })
 
+function processLogin(authResult) {
+	$.post("/connect", JSON.stringify(authResult), function(profile) {
+		console.log(profile);
+	});
+}
+
 function initMaps() {
 	var mapOptions = {
 		center : new google.maps.LatLng(-34.397, 150.644),

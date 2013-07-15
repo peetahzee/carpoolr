@@ -1,106 +1,80 @@
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-    pageEncoding="ISO-8859-1"%>
-<%@ page import="com.google.appengine.api.datastore.DatastoreService" %>
-<%@ page import="com.google.appengine.api.datastore.DatastoreServiceFactory" %>
-<%@ page import="com.google.appengine.api.datastore.Entity" %>
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1"%>
 <%@ page import="com.google.appengine.api.datastore.GeoPt" %>
-<%@ page import="com.google.appengine.api.datastore.FetchOptions" %>
-<%@ page import="com.google.appengine.api.datastore.Key" %>
-<%@ page import="com.google.appengine.api.datastore.KeyFactory" %>
-<%@ page import="com.google.appengine.api.datastore.Query" %>
-<%@ page import="com.google.appengine.api.datastore.Query.Filter" %>
-<%@ page import="com.google.appengine.api.datastore.Query.FilterOperator" %>
-<%@ page import="com.google.appengine.api.datastore.Query.FilterPredicate" %>
-<%@ page import="com.google.appengine.api.datastore.Query.SortDirection" %>
-<%@ page import="com.google.appengine.api.datastore.PreparedQuery" %>
-<%@ page import="java.util.Date" %>
-<%@ page import="java.util.List" %>
-<%@ page import="java.util.Map.Entry" %>
-<%@ page import="java.text.SimpleDateFormat" %>
-<%@ page import="java.util.TimeZone" %>
-<%@ page import="com.ptzlabs.carpoolr.CarpoolrServlet" %>
+<%@ page import="java.util.ArrayList"%>
+<%@ page import="java.util.Date"%>
+<%@ page import="java.util.List"%>
+<%@ page import="java.util.Map.Entry"%>
+<%@ page import="java.text.SimpleDateFormat"%>
+<%@ page import="java.util.TimeZone"%>
+<%@ page import="com.ptzlabs.carpoolr.Config"%>
+<%@ page import="com.ptzlabs.carpoolr.Driver"%>
+<%@ page import="com.ptzlabs.carpoolr.Event"%>
+<%@ page import="com.ptzlabs.carpoolr.People"%>
+<%@ page import="com.ptzlabs.carpoolr.Rider"%>
+<%@ page import="com.ptzlabs.carpoolr.Utils"%>
+<%@ page import="com.ptzlabs.carpoolr.servlets.CarpoolrServlet"%>
+<%@ page import="com.ptzlabs.carpoolr.servlets.JspServlet"%>
 
-<%@ include file="header.jsp" %>
-<%
-DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-
-Entity event;
-if(request.getParameter("id") != null) {
-    Key k = KeyFactory.createKey("event", Integer.valueOf(request.getParameter("id")));
-    event = datastore.get(k);
-} else {
-    if(request.getParameter("code") == null) {
-		%><script type="text/javascript">window.location = "/";</script><%
-		return;
-    }
-	String eventCode = request.getParameter("code").toLowerCase();
+<%@ include file="header.jsp"%>
+<% Event event;
+	if(request.getParameter("id") != null) {
+	    event = JspServlet.getEvent(Long.valueOf(request.getParameter("id")));
+	} else {
+	    if(request.getParameter("code") == null) {
+			out.print(JspServlet.redirectHomepage());
+			return;
+	    }
+	    event = JspServlet.getEvent(request.getParameter("code"));
+	}
 	
-	Filter eventCodeFilter = new FilterPredicate("code", FilterOperator.EQUAL, eventCode);
-	Query q = new Query("event").setFilter(eventCodeFilter);
-	PreparedQuery pq = datastore.prepare(q);
-	event = pq.asSingleEntity();
-}
-
-if(event == null) {
-    %><script type="text/javascript">window.location = "/";</script><%
-    return;
-}
-
-Date createdDate = (Date) event.getProperty("time");
-Date arrivalTime = (Date) event.getProperty("arrivalTime");
-SimpleDateFormat dateFormatter = new SimpleDateFormat("E, MMM dd");
-dateFormatter.setTimeZone(TimeZone.getTimeZone("GMT-8"));
-SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("E, MMM dd HH:mm");
-dateTimeFormatter.setTimeZone(TimeZone.getTimeZone("GMT-8"));
-
-User hostUser = (User) event.getProperty("user");
-
-Filter eventIDFilter = new FilterPredicate("event", FilterOperator.EQUAL, event.getKey().getId());
-Query q = new Query("rider").setFilter(eventIDFilter);
-PreparedQuery pq = datastore.prepare(q);
-List<Entity> riders = pq.asList(FetchOptions.Builder.withDefaults());
-
-if(request.getParameter("nr") != null) {
-    int newRiderID = Integer.valueOf(request.getParameter("nr"));
-    Key k = KeyFactory.createKey("rider", newRiderID);
-    Entity rider = datastore.get(k);
-    if(!riders.contains(rider)) {
-		riders.add(rider);
-    }
-}
-
-q = new Query("driver").setFilter(eventIDFilter);
-pq = datastore.prepare(q);
-List<Entity> drivers = pq.asList(FetchOptions.Builder.withDefaults());
-
-if(request.getParameter("nd") != null) {
-    int newDriverID = Integer.valueOf(request.getParameter("nd"));
-    Key k = KeyFactory.createKey("driver", newDriverID);
-    Entity driver = datastore.get(k);
-    if(!drivers.contains(driver)) {
-		drivers.add(driver);
-    }
-}
-
-int totalCapacity = 0;
-boolean foundUser = false;
-for(Entity driver : drivers) {
-    totalCapacity += (Long) driver.getProperty("capacity");
-    if(driver.getProperty("user").equals(user)) {
-		foundUser = true;
-    }
-}
-for(Entity rider : riders) {
-    if(rider.getProperty("user").equals(user)) {
-		foundUser = true;
-    }
-}
+	if(event == null) {
+	    out.print(JspServlet.redirectHomepage());
+	    return;
+	}
+	
+	Date createdDate = event.time;
+	Date arrivalTime = event.arrivalTime;
+	SimpleDateFormat dateFormatter = new SimpleDateFormat("E, MMM dd");
+	dateFormatter.setTimeZone(TimeZone.getTimeZone("GMT-8"));
+	SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("E, MMM dd HH:mm");
+	dateTimeFormatter.setTimeZone(TimeZone.getTimeZone("GMT-8"));
+	
+	List<People> people = JspServlet.getPeople(event.id);
+	List<Driver> drivers = new ArrayList<Driver>();
+	List<Rider> riders = new ArrayList<Rider>();
+	
+	if(request.getParameter("nr") != null) {
+	    people.add(JspServlet.getRider(Integer.valueOf(request.getParameter("nr"))));
+	}
+	
+	if(request.getParameter("nd") != null) {
+		people.add(JspServlet.getDriver(Integer.valueOf(request.getParameter("nd"))));
+	}
+	
+	int totalCapacity = 0;
+	int numRiders = 0;
+	int numDrivers = 0;
+	boolean foundUser = false;
+	
+	for(People p : people) {
+		if(p instanceof Driver) {
+			totalCapacity += ((Driver) p).capacity;
+			drivers.add((Driver) p);
+			numDrivers++;
+		} else if (p instanceof Rider) {
+			numRiders++;
+			riders.add((Rider) p);
+		}
+		if(p.user.equals(user)) {
+			foundUser = true;
+		}
+	}
 %>
 
-	<script type="text/javascript">
-		window.history.replaceState("updateEventUrl", "", "/event.jsp?code=<%=event.getProperty("code")%>")
-		var eventOrigin = new google.maps.LatLng(<%=event.getProperty("origin")%>);
-		var eventDestination = new google.maps.LatLng(<%=event.getProperty("destination")%>);
+<script type="text/javascript">
+		window.history.replaceState("updateEventUrl", "", "/event.jsp?code=<%=event.code%>")
+		var eventOrigin = new google.maps.LatLng(<%=event.origin%>);
+		var eventDestination = new google.maps.LatLng(<%=event.destination%>);
 		
 		var riderDetails = new Array();
 		var driverDetails = new Array();
@@ -144,9 +118,9 @@ for(Entity rider : riders) {
 			});
 			
 			$("#addRiderButton").click(function() {
-				<% if(user == null) { %>
+				<%if(user == null) {%>
 				  	window.location = "<%=userService.createLoginURL(request.getRequestURI() + "?code=" + request.getParameter("code"))%>";
-				<% } else { %>
+				<%} else {%>
 					setMapOpacity(0.7);
 					clearOverlays();
 					riderDetails = new Array();
@@ -154,7 +128,7 @@ for(Entity rider : riders) {
 					$("#addRider").show(0);
 					$(".dialog").show(300);
 					$("a.backLink").show(0);
-				<% } %>
+				<%}%>
 			});
 			
 			$("form#addRiderForm").submit(function(event) {
@@ -178,9 +152,9 @@ for(Entity rider : riders) {
 			});
 			
 			$("#addDriverButton").click(function() {
-				<% if(user == null) { %>
+				<%if(user == null) {%>
 				  	window.location = "<%=userService.createLoginURL(request.getRequestURI() + "?code=" + request.getParameter("code"))%>";
-				<% } else { %>
+				<%} else {%>
 					setMapOpacity(0.7);
 					clearOverlays();
 					driverDetails = new Array();
@@ -188,7 +162,7 @@ for(Entity rider : riders) {
 					$("#addDriver").show(0);
 					$(".dialog").show(300);
 					$("a.backLink").show(0);
-				<% } %>
+				<%}%>
 			});
 			
 			$("form#addDriverForm").submit(function(event) {
@@ -296,18 +270,11 @@ for(Entity rider : riders) {
 		}
 		
 		function loadUserLocations() {
-			var riderLocation;
-			<% for(Entity rider: riders) { %>
-	    		createMarker(new google.maps.LatLng(<%=((GeoPt) rider.getProperty("location")).toString()%>), 
-							"<%=rider.getProperty("name")%>", null, "<%=rider.getProperty("address")%>");
+			<% for (Driver d : drivers) { %>
+				createMarker(new google.maps.LatLng(<%=d.location.toString()%>), "<%=d.address%>", null, "<%=d.name%>, <%=d.capacity%> spots", <%=Config.IMG_BLUE_DOT%>);
 			<% } %>
-			
-			var driverLocation;
-			<% for(Entity driver: drivers) { %>
-	    		createMarker(new google.maps.LatLng(<%=((GeoPt) driver.getProperty("location")).toString()%>),
-	    				"<%=driver.getProperty("address")%>", null, 
-	    				"<%=driver.getProperty("name")%>, <%=driver.getProperty("capacity")%> spots", 
-	    				"http://www.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png");
+			<% for (Rider r : riders) { %>
+				createMarker(new google.maps.LatLng(<%=r.location.toString()%>), "<%=r.name%>", null, "<%=r.address%>");
 			<% } %>
 		}
 		
@@ -318,22 +285,19 @@ for(Entity rider : riders) {
 		}
 		
 		function loadData() {
-			<% for(Entity rider : riders) { %>
-			riders[<%=rider.getKey().getId()%>] = {
-				<% for(Entry prop : rider.getProperties().entrySet()) { %>
-					<%=prop.getKey()%> : "<%=prop.getValue()%>",
+			<% for(People p : people) { %>
+				var p = {
+					address: "<%=p.address%>",
+					location: new google.maps.LatLng(<%=p.location.toString()%>,
+					names: "<%=p.name%>",
+					time: "<%=p.time.toString()%>",
+					user: "<%=p.user.getEmail()%>"
+				}
+				<% if(p instanceof Driver) { %>
+					drivers[<%=p.id%>] = p;
+				<% } else if (p instanceof Rider) { %>
+					riders[<%=p.id%>] = p;
 				<% } %>
-					location: new google.maps.LatLng(<%=rider.getProperty("location").toString()%>)
-				};
-			<% } %>
-			
-			<% for(Entity driver : drivers) { %>
-			drivers[<%=driver.getKey().getId()%>] = {
-				<% for(Entry prop : driver.getProperties().entrySet()) { %>
-					<%=prop.getKey()%> : "<%=prop.getValue()%>",
-				<% } %>
-				location: new google.maps.LatLng(<%=driver.getProperty("location").toString()%>)
-			};
 			<% } %>
 		}
 		
@@ -361,118 +325,103 @@ for(Entity rider : riders) {
 			});
 		}
 	</script>
-	
-	<div id="route_details" class="event_details">
-		<h1><b><%=event.getProperty("name") %></b> [<%=event.getProperty("code") %>]</h1>
-		<p>created by <%=hostUser.getEmail()%>, on <%=dateFormatter.format(createdDate)%><br />
-		Arrive by: <%=dateTimeFormatter.format(arrivalTime) %></p>
-			
-		<div id="event_summary">
-			<div id="avatars">
-				<b><%=riders.size()%> riders:</b><br />
-				<img src="http://www.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png" />
-				<% for(Entity rider: riders) { 
-					User riderUser = (User) rider.getProperty("user");
-				%>
-				<img alt="<%=rider.getProperty("name")%>"
-					 title="<%=rider.getProperty("name")%>"
-					 class="rider_avatar"
-					 data-riderid="<%=rider.getKey().getId()%>"
-				     src="http://www.gravatar.com/avatar/<%=CarpoolrServlet.md5(riderUser.getEmail().toLowerCase())%>?d=identicon" />
-				<% } %>
-				
-				<div class="clear"></div>
-				
-				<b><%=drivers.size()%> drivers, <%=totalCapacity %> seats:</b><br />
-				<img src="http://www.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png" />
-				<% for(Entity driver: drivers) { 
-					User driverUser = (User) driver.getProperty("user");
-				%>
-				
-				<img alt="<%=driver.getProperty("name")%>"
-					 title="<%=driver.getProperty("name")%>"
-					 class="driver_avatar"
-					 data-driverid="<%=driver.getKey().getId()%>"
-				     src="http://www.gravatar.com/avatar/<%=CarpoolrServlet.md5(driverUser.getEmail().toLowerCase())%>?d=identicon" />
-				<% } %>
-			</div>
+
+<div id="route_details" class="event_details">
+	<h1>
+		<b><%=event.name%></b> [<%=event.code%>]
+	</h1>
+	<p>
+		created by
+		<%=event.user.getEmail()%>, on
+		<%=dateFormatter.format(createdDate)%><br /> Arrive by:
+		<%=dateTimeFormatter.format(arrivalTime)%></p>
+
+	<div id="event_summary">
+		<div id="avatars">
+			<b><%=numRiders%> riders:</b><br /><img src="<%=Config.IMG_RED_DOT%>" />
+			<% for (Rider r : riders) {
+				out.print(r.getAvatar());
+			} %>
+
+			<div class="clear"></div>
+
+			<b><%=numDrivers%> drivers, <%=totalCapacity%> seats:</b><br /><img src="<%=Config.IMG_BLUE_DOT%>" />
+			<% for (Driver d : drivers) {
+				out.print(d.getAvatar());
+			} %>
 		</div>
+	</div>
+
+	<% if (user != null && user.equals(event.user)) { %>
+	<div id="event_manage" style="display: none;">
+		<% if (numDrivers == 0) { %>
 		
-		<% if(user != null && user.equals(hostUser)) { %>
-		<div id="event_manage" style="display: none;">
-			<% if(drivers.size() == 0)  { %>
-				<p>No drivers.</p>
-			<% } else { %>
+			<p>No drivers.</p>
+		
+		<% } else { %>
 			<p>Select a driver from below, and assign riders to them.</p>
 			<ul id="drivers" class="user_list">
-				<% for(Entity driver: drivers) { 
-					User driverUser = (User) driver.getProperty("user"); %>
-					<li data-driverid="<%=driver.getKey().getId()%>">
-						<img alt="<%=driver.getProperty("name")%>"
-							 title="<%=driver.getProperty("name")%>"
-				   			 src="http://www.gravatar.com/avatar/<%=CarpoolrServlet.md5(driverUser.getEmail().toLowerCase())%>?d=identicon" />
-						<span class="name"><b><%=driver.getProperty("name") %></b>, <%=driver.getProperty("capacity")%> spots</span>
+				<% for (Driver d : drivers) {%>
+					<li data-driverid="<%=d.id%>">
+						<%=d.getAvatar()%>
+						<span class="name"><b><%=d.name%></b>, <%=d.capacity%> spots</span>
 						<span class="action"><a href="javascript: void(0)">(select)</a></span>
 						<div class="clear"></div>
 					</li>
 				<% } %>
 			</ul>
-			
+	
 			<ul id="riders" class="user_list" style="display: none;">
-				<% for(Entity rider: riders) { 
-					User riderUser = (User) rider.getProperty("user"); %>
-					<li data-riderid="<%=rider.getKey().getId()%>"<%=(rider.getProperty("pairedDriver")!=null)?" class=\"taken\"":"" %>>
-						<img alt="<%=rider.getProperty("name")%>"
-							 title="<%=rider.getProperty("name")%>"
-				   			 src="http://www.gravatar.com/avatar/<%=CarpoolrServlet.md5(riderUser.getEmail().toLowerCase())%>?d=identicon" />
-				   		<% if (rider.getProperty("pairedDriver") == null) {%>
-							<span class="name"><%=rider.getProperty("name") %>, <%=riderUser.getEmail()%></span>
+				<% for (Rider r : riders) { %>
+					<li data-riderid="<%=r.id%>" <%=(r.pairedDriver != null) ? " class=\"taken\"" : ""%>>
+						<%=r.getAvatar()%>
+						<% if (r.pairedDriver == null) { %>
+							<span class="name"><%=r.name%>, <%=r.user.getEmail()%></span>
 							<span class="action"><a href="javascript: void(0)">(assign)</a></span>
 						<% } else { %>
-							<span class="name"><%=rider.getProperty("name") %>,
-								paired with <span class="driverName" data-driverid="<%=rider.getProperty("pairedDriver")%>"></span></span>
+							<span class="name"><%=r.name%>, paired with <span class="driverName" data-driverid="<%=r.pairedDriver%>"></span></span>
 						<% } %>
 						<div class="clear"></div>
 					</li>
 				<% } %>
 			</ul>
-			<% } %>
-			
-			
-			<% } %>
-		</div>
-		<a href="javascript: void(0)" style="display: none;" class="backLink">< back</a>
-	</div>
-	
-	<div id="event_buttons" class="event_details">
-		<% if(!foundUser) { %>
-			<button id="addRiderButton">+ rider</button>
-			<button id="addDriverButton">+ driver</button>
 		<% } %>
-		<% if(hostUser.equals(user)) { %><button id="manageButton">manage</button> <% } %>
-		<button id="shareButton">share</button>
 	</div>
-	
-	<div class="dialog" style="display: none;">
-		<div id="addRider" style="display: none;">
-			<h1 class="green">Join Event as Rider</h1>
-			<p>Fill in your information and we'll try to find you a driver: </p>
-			<form id="addRiderForm">
+	<% } %>
+	<a href="javascript: void(0)" style="display: none;" class="backLink">back</a>
+</div>
+
+<div id="event_buttons" class="event_details">
+	<% if (!foundUser) { %>
+		<button id="addRiderButton">+ rider</button>
+		<button id="addDriverButton">+ driver</button>
+	<% } %>
+	<% if (event.user.equals(user)) { %>
+		<button id="manageButton">manage</button>
+	<% } %>
+	<button id="shareButton">share</button>
+</div>
+
+<div class="dialog" style="display: none;">
+	<div id="addRider" style="display: none;">
+		<h1 class="green">Join Event as Rider</h1>
+		<p>Fill in your information and we'll try to find you a driver:</p>
+		<form id="addRiderForm">
 			<div class="input_wrapper">
 				<label class="green">Name</label>
 				<input type="text" name="riderName" placeholder="John Smith" />
 			</div>
 			<div class="input_wrapper">
 				<label class="green"></label>
-				<button id="addRiderNext">Next ></button>
+				<button id="addRiderNext">Next &gt;</button>
 			</div>
-			</form>
-		</div>
-		
-		<div id="addRiderConfirm" style="display: none;">
-			<h1 class="green">Confirm Event</h1>
-			<p>Here's what you entered:</p>
-			<form id="addRiderConfirmForm" method="post" action="/serv">
+		</form>
+	</div>
+
+	<div id="addRiderConfirm" style="display: none;">
+		<h1 class="green">Confirm Event</h1>
+		<p>Here's what you entered:</p>
+		<form id="addRiderConfirmForm" method="post" action="/serv">
 			<div class="input_wrapper">
 				<label class="green">Name</label>
 				<div id="riderNameConfirm"></div>
@@ -481,23 +430,24 @@ for(Entity rider : riders) {
 			<div class="input_wrapper">
 				<label class="green">Location</label>
 				<div id="riderLocationConfirm"></div>
-				<input type="hidden" name="riderLocationLat" value="" />
+				<input type="hidden" name="riderLocationLat" value="" /> 
 				<input type="hidden" name="riderLocationLng" value="" />
 				<input type="hidden" name="riderLocationAddress" value="" />
 			</div>
 			<div class="input_wrapper">
 				<label class="green"></label>
-				<input type="hidden" name="mode" value="addRider" />
-				<input type="hidden" name="event" value="<%=event.getKey().getId()%>" />
-				<button id="addRiderConfirmButton">Confirm ></button>
+					<input type="hidden" name="mode" value="addRider" />
+					<input type="hidden" name="event" value="<%=event.id%>" />
+				<button id="addRiderConfirmButton">Confirm &gt;</button>
 			</div>
-			</form>
-		</div>
-		
-		<div id="addDriver" style="display: none;">
-			<h1 class="red">Join Event as Driver</h1>
-			<p>Fill in your information and we'll get you registered as a driver: </p>
-			<form id="addDriverForm">
+		</form>
+	</div>
+
+	<div id="addDriver" style="display: none;">
+		<h1 class="red">Join Event as Driver</h1>
+		<p>Fill in your information and we'll get you registered as a
+			driver:</p>
+		<form id="addDriverForm">
 			<div class="input_wrapper">
 				<label class="red">Name</label>
 				<input type="text" name="driverName" placeholder="John Smith" />
@@ -508,15 +458,15 @@ for(Entity rider : riders) {
 			</div>
 			<div class="input_wrapper">
 				<label class="red"></label>
-				<button id="addDriverNext" class="red">Next ></button>
+				<button id="addDriverNext" class="red">Next &gt;</button>
 			</div>
-			</form>
-		</div>
-		
-		<div id="addDriverConfirm" style="display: none;">
-			<h1 class="red">Confirm Event</h1>
-			<p>Here's what you entered:</p>
-			<form id="addDriverConfirmForm" method="post" action="/serv">
+		</form>
+	</div>
+
+	<div id="addDriverConfirm" style="display: none;">
+		<h1 class="red">Confirm Event</h1>
+		<p>Here's what you entered:</p>
+		<form id="addDriverConfirmForm" method="post" action="/serv">
 			<div class="input_wrapper">
 				<label class="red">Name</label>
 				<div id="driverNameConfirm"></div>
@@ -536,19 +486,19 @@ for(Entity rider : riders) {
 			</div>
 			<div class="input_wrapper">
 				<label class="red"></label>
-				<input type="hidden" name="mode" value="addDriver" />
-				<input type="hidden" name="event" value="<%=event.getKey().getId()%>" />
-				<button id="addDriverConfirmButton" class="red">Confirm ></button>
+					<input type="hidden" name="mode" value="addDriver" />
+					<input type="hidden" name="event" value="<%=event.id%>" />
+				<button id="addDriverConfirmButton" class="red">Confirm &gt;</button>
 			</div>
-			</form>
-		</div>
-		
-		<div id="shareEvent" style="display: none;">
-			<h1 class="green">Share Event</h1>
-			<p>Copy the link below and tell your friends to respond to the event:</p>
-			<p><b>http://car.ptzlabs.com/event.jsp?code=<%=event.getProperty("code")%></b></p>
-		</div>
-		<a href="javascript:void(0)" class="backLink">< back</a>
+		</form>
 	</div>
-	
-<%@ include file="footer.jsp" %>
+
+	<div id="shareEvent" style="display: none;">
+		<h1 class="green">Share Event</h1>
+		<p>Copy the link below and tell your friends to respond to the event:</p>
+		<p><b><%=event.getEventLink()%></b></p>
+	</div>
+	<a href="javascript:void(0)" class="backLink">&lt; back</a>
+</div>
+
+<%@ include file="footer.jsp"%>
